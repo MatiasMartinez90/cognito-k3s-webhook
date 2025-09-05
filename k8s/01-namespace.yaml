@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rrhh-agent
+  labels:
+    name: rrhh-agent
+    app: cognito-k3s-webhook

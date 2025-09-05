@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cognito-webhook
+  namespace: rrhh-agent
+  labels:
+    app: cognito-webhook
+    component: main
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cognito-webhook
+      component: main
+  template:
+    metadata:
+      labels:
+        app: cognito-webhook
+        component: main
+    spec:
+      imagePullSecrets:
+      - name: registry-secret
+      containers:
+      - name: webhook
+        image: registry.cloud-it.com.ar/cognito-k3s-webhook:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        envFrom:
+        - configMapRef:
+            name: webhook-config
+        - secretRef:
+            name: webhook-secret
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL

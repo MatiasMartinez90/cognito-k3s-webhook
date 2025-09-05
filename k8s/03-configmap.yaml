@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-config
+  namespace: rrhh-agent
+data:
+  # Database connection
+  DB_HOST: "postgresql-service.postgresql.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "agent"
+  DB_USER: "postgres"
+  
+  # Application settings
+  PORT: "8000"
+  
+  # Logging
+  LOG_LEVEL: "info"
