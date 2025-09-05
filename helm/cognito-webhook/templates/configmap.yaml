@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.app.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.app.name }}
+    helm.sh/chart: {{ include "cognito-webhook.chart" . }}
+    app.kubernetes.io/name: {{ include "cognito-webhook.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  # Database configuration
+  DB_HOST: {{ .Values.database.host | quote }}
+  DB_PORT: {{ .Values.database.port | quote }}
+  DB_NAME: {{ .Values.database.name | quote }}
+  DB_USER: {{ .Values.database.user | quote }}
+  USERS_TABLE: {{ .Values.database.usersTable | quote }}
+  
+  # App configuration
+  APP_TITLE: {{ .Values.app.title | quote }}
+  APP_DESCRIPTION: {{ .Values.app.description | quote }}
+  APP_VERSION: {{ .Values.app.version | quote }}
+  PORT: {{ .Values.app.port | quote }}
+  
+  # Cognito configuration
+  TRIGGER_SOURCE: {{ .Values.cognito.triggerSource | quote }}
+  DEFAULT_PROVIDER: {{ .Values.cognito.defaultProvider | quote }}
+  TEST_USER_POOL_ID: {{ .Values.cognito.testUserPoolId | quote }}
+  TEST_REGION: {{ .Values.cognito.testRegion | quote }}
+  
+  # Logging configuration
+  LOG_LEVEL: {{ .Values.logging.level | quote }}

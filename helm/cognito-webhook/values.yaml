@@ -1,0 +1,76 @@
+# Default values for cognito-webhook
+# This is a YAML-formatted file.
+# Declare variables to be substituted into your templates.
+
+# Application configuration
+app:
+  name: cognito-webhook
+  title: "Cognito K3s Webhook"
+  description: "FastAPI microservice for handling Cognito PostConfirmation events"
+  version: "1.0.0"
+  port: 8000
+
+# Image configuration
+image:
+  registry: registry.cloud-it.com.ar
+  name: cognito-k3s-webhook
+  tag: latest
+  pullPolicy: Always
+
+# Registry credentials
+imageCredentials:
+  registry: registry.cloud-it.com.ar
+  username: admin
+  password: admin  # This will be overridden by GitHub variables
+
+# Deployment configuration
+deployment:
+  replicas: 2
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi" 
+      cpu: "200m"
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+# Ingress configuration
+ingress:
+  enabled: true
+  host: webhook-rrhh.cloud-it.com.ar
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: cognito-webhook-tls
+
+# Database configuration
+database:
+  host: postgresql-service.postgresql.svc.cluster.local
+  port: 5432
+  name: agent
+  user: postgres
+  password: password  # This will be overridden by GitHub variables
+  usersTable: users
+
+# Cognito configuration
+cognito:
+  triggerSource: PostConfirmation_ConfirmSignUp
+  defaultProvider: google
+  testUserPoolId: us-east-1_MeClCiUAC
+  testRegion: us-east-1
+
+# Kubernetes configuration
+namespace: rrhh-agent
+
+# Logging configuration
+logging:
+  level: info

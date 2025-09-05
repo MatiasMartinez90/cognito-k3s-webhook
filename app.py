@@ -9,15 +9,25 @@ import psycopg2
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 import uvicorn
+from dotenv import load_dotenv
+
+# Load .env file if exists (development only)
+load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+log_level = os.getenv('LOG_LEVEL', 'info').upper()
+logging.basicConfig(level=getattr(logging, log_level))
 logger = logging.getLogger(__name__)
 
+# App configuration from environment variables
+APP_TITLE = os.getenv('APP_TITLE', 'Cognito K3s Webhook')
+APP_DESCRIPTION = os.getenv('APP_DESCRIPTION', 'FastAPI microservice for handling Cognito PostConfirmation events')
+APP_VERSION = os.getenv('APP_VERSION', '1.0.0')
+
 app = FastAPI(
-    title="Cognito K3s Webhook",
-    description="FastAPI microservice for handling Cognito PostConfirmation events",
-    version="1.0.0"
+    title=APP_TITLE,
+    description=APP_DESCRIPTION,
+    version=APP_VERSION
 )
 
 # Database configuration
@@ -28,6 +38,15 @@ DB_CONFIG = {
     'user': os.getenv('DB_USER', 'postgres'),
     'password': os.getenv('DB_PASSWORD', 'password')
 }
+
+# App configuration
+USERS_TABLE = os.getenv('USERS_TABLE', 'users')
+DEFAULT_PROVIDER = os.getenv('DEFAULT_PROVIDER', 'google')
+TRIGGER_SOURCE = os.getenv('TRIGGER_SOURCE', 'PostConfirmation_ConfirmSignUp')
+
+# Test configuration
+TEST_USER_POOL_ID = os.getenv('TEST_USER_POOL_ID', 'us-east-1_MeClCiUAC')
+TEST_REGION = os.getenv('TEST_REGION', 'us-east-1')
 
 class CognitoEvent(BaseModel):
     version: str
@@ -55,8 +74,8 @@ def create_user_in_database(cognito_user_id: str, email: str, name: str, picture
         cursor = conn.cursor()
         
         # Insert user into database
-        insert_query = """
-        INSERT INTO users (id, cognito_user_id, email, name, picture_url, provider, created_at, updated_at, is_active, onboarding_completed, preferences)
+        insert_query = f"""
+        INSERT INTO {USERS_TABLE} (id, cognito_user_id, email, name, picture_url, provider, created_at, updated_at, is_active, onboarding_completed, preferences)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (cognito_user_id) DO UPDATE SET
             email = EXCLUDED.email,
@@ -74,7 +93,7 @@ def create_user_in_database(cognito_user_id: str, email: str, name: str, picture
             email,
             name,
             picture_url,
-            'google',
+            DEFAULT_PROVIDER,
             now,
             now,
             True,
@@ -142,7 +161,7 @@ async def cognito_post_confirmation(request: Request):
         logger.info(f"Received Cognito event: {event_data.get('triggerSource')}")
         
         # Validate this is a PostConfirmation event
-        if event_data.get('triggerSource') != 'PostConfirmation_ConfirmSignUp':
+        if event_data.get('triggerSource') != TRIGGER_SOURCE:
             logger.warning(f"Ignoring non-PostConfirmation event: {event_data.get('triggerSource')}")
             return {"statusCode": 200, "body": "Event ignored"}
         
@@ -184,10 +203,10 @@ async def test_webhook():
     """Test endpoint to simulate a Cognito PostConfirmation event"""
     test_event = {
         "version": "1",
-        "region": "us-east-1",
-        "userPoolId": "us-east-1_MeClCiUAC",
+        "region": TEST_REGION,
+        "userPoolId": TEST_USER_POOL_ID,
         "userName": "test-user-123",
-        "triggerSource": "PostConfirmation_ConfirmSignUp",
+        "triggerSource": TRIGGER_SOURCE,
         "request": {
             "userAttributes": {
                 "email": "test@example.com",

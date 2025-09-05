@@ -1,0 +1,15 @@
+apiVersion: v2
+name: cognito-webhook
+description: FastAPI microservice for handling Cognito PostConfirmation events
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - cognito
+  - webhook
+  - fastapi
+  - kubernetes
+home: https://github.com/MatiasMartinez90/cognito-k3s-webhook
+maintainers:
+  - name: Matias Martinez
+    email: matias.martinez90@gmail.com
