@@ -300,3 +300,4 @@ This project replaces the original AWS Lambda PostConfirmation function with ben
 - **Cognito Pool**: `us-east-1_MeClCiUAC` user pool
 - **Domain**: `webhook-rrhh.cloud-it.com.ar` (managed by Traefik + cert-manager)
 - **Registry**: `registry.cloud-it.com.ar` private Docker registry
+# Pipeline trigger
