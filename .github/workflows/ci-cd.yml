@@ -60,7 +60,7 @@ jobs:
         MAIN_TAG=$(echo "$TAGS" | head -1)
         
         echo "🔨 Building with buildah: $MAIN_TAG"
-        buildah build --format docker --platform linux/arm64 -t "$MAIN_TAG" .
+        buildah bud --format docker --platform linux/arm64 -t "$MAIN_TAG" .
         
         # Push all tags
         for TAG in $TAGS; do
