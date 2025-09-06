@@ -51,28 +51,29 @@ jobs:
     - name: Build and push Docker image
       id: build
       run: |
-        # Use buildah instead of docker for better K8s compatibility
-        echo "🐳 Installing buildah..."
-        sudo apt-get update && sudo apt-get install -y buildah
-        
-        # Build image with buildah
+        # Simple Docker build approach for ARM64 
         TAGS="${{ steps.meta.outputs.tags }}"
         MAIN_TAG=$(echo "$TAGS" | head -1)
         
-        echo "🔨 Building with buildah: $MAIN_TAG"
-        buildah bud --format docker --platform linux/arm64 -t "$MAIN_TAG" .
+        echo "🐳 Building: $MAIN_TAG"
+        DOCKER_BUILDKIT=0 docker build --no-cache -t "$MAIN_TAG" .
+        
+        # Tag other versions
+        for TAG in $TAGS; do
+          if [ "$TAG" != "$MAIN_TAG" ]; then
+            echo "🏷️ Tagging: $TAG"
+            docker tag "$MAIN_TAG" "$TAG"
+          fi
+        done
         
         # Push all tags
         for TAG in $TAGS; do
           echo "📤 Pushing: $TAG"
-          if [ "$TAG" != "$MAIN_TAG" ]; then
-            buildah tag "$MAIN_TAG" "$TAG"
-          fi
-          buildah push --authfile ~/.docker/config.json "$TAG"
+          docker push "$TAG"
         done
         
         echo "✅ Build and push completed"
-        echo "digest=sha256:$(buildah images --format '{{.Digest}}' $MAIN_TAG | cut -d':' -f2)" >> $GITHUB_OUTPUT
+        echo "digest=$(docker inspect --format='{{index .RepoDigests 0}}' $MAIN_TAG 2>/dev/null | cut -d'@' -f2 || echo 'unknown')" >> $GITHUB_OUTPUT
 
   update-helm-values:
     needs: build-and-push
