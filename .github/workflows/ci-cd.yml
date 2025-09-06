@@ -56,7 +56,7 @@ jobs:
 
   update-helm-values:
     needs: build-and-push
-    runs-on: [self-hosted, k3s, arm64]
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
     steps:
@@ -162,7 +162,7 @@ jobs:
 
   notify-argocd:
     needs: [build-and-push, update-helm-values]
-    runs-on: [self-hosted, k3s, arm64]
+    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     
     steps:
