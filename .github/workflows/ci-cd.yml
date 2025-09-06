@@ -23,13 +23,19 @@ jobs:
       
     - name: Login to Private Registry
       run: |
-        echo "🔐 Logging into ${{ env.REGISTRY }}..."
-        timeout 30s bash -c 'echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u admin --password-stdin' || {
-          echo "❌ Docker login failed or timed out"
-          echo "🔍 Testing registry connectivity..."
-          curl -v https://${{ env.REGISTRY }}/v2/ || true
-          exit 1
+        echo "🔐 Creating Docker config manually..."
+        mkdir -p ~/.docker
+        AUTH_STRING=$(echo -n "admin:${{ secrets.REGISTRY_PASSWORD }}" | base64 -w 0)
+        cat > ~/.docker/config.json << EOF
+        {
+          "auths": {
+            "${{ env.REGISTRY }}": {
+              "auth": "${AUTH_STRING}"
+            }
+          }
         }
+        EOF
+        echo "✅ Docker auth configured for ${{ env.REGISTRY }}"
     
     - name: Extract metadata
       id: meta
